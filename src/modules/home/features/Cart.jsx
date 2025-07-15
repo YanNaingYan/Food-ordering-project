@@ -9,6 +9,8 @@ const Cart = ({
   onUpdateQuantity,
   onRemoveItem,
   onCheckout,
+  notes,
+  setNotes,
 }) => {
   if (!isOpen) return null;
 
@@ -112,6 +114,18 @@ const Cart = ({
           {/* Footer */}
           {cart.items.length > 0 && (
             <div className="border-t border-gray-200 p-6">
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-2">
+                  Add notes (Optional)
+                </h4>
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Any requests or modifications..."
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
+                  rows={3}
+                />
+              </div>
               <div className="flex justify-between items-center mb-4">
                 <span className="text-lg font-semibold text-gray-900">
                   Total:

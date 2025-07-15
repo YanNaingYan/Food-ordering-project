@@ -1,20 +1,16 @@
 import React, { useMemo, useState } from "react";
 import Hero from "../features/Hero";
-import { useQuery } from "@tanstack/react-query";
-import { getCategories, getMenus } from "../../../api/api";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { getCategories, getMenus, order } from "../../../api/api";
 import Header from "../features/Header";
 import Cart from "../features/Cart";
 import MenuItem from "../features/MenuItem";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerBody,
-  DrawerFooter,
-  useDisclosure,
-} from "@heroui/react";
+import { useDisclosure } from "@heroui/react";
 import MenuCategories from "../features/MenuCategories";
 import MenuItemDetail from "../features/MenuItemDetail";
+import toast, { Toaster } from "react-hot-toast";
+import SkeletonsMenuItems from "../components/SkeletonsMenuItems";
+import SkeletonsCategory from "../components/SkeletonsCategory";
 const Home = () => {
   const {
     data: categories,
@@ -28,9 +24,23 @@ const Home = () => {
     queryKey: ["menus"],
     queryFn: getMenus,
   });
+  const {
+    isSuccess: isSuccess,
+    isLoading: orderLoading,
+    mutate,
+  } = useMutation({
+    mutationFn: order,
+    onSuccess: () => {
+      toast.success("Order placed successfully!");
+    },
+    onError: (error) => {
+      toast.error("order failed!");
+    },
+  });
+
   console.log("categories", categories);
   console.log("menus", menus);
-
+  const [notes, setNotes] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [cart, setCart] = useState({
     items: [],
@@ -42,6 +52,7 @@ const Home = () => {
   const [selectedItem, setSelectedItem] = useState(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
+
   // Filter menu items based on category and search query
   const filteredItems = useMemo(() => {
     let filtered = menus?.data;
@@ -64,7 +75,8 @@ const Home = () => {
     }
 
     return filtered;
-  }, [selectedCategory, searchQuery]);
+  }, [selectedCategory, searchQuery, menus]);
+
   // Update cart totals
   const updateCartTotals = (items) => {
     const total = items.reduce(
@@ -95,34 +107,30 @@ const Home = () => {
 
       return updateCartTotals(newItems);
     });
+    toast.success("Item added to cart successfully!");
   };
 
   // Add item to cart with quantity and special instructions
-  const handleAddToCartWithDetails = (item, quantity, specialInstructions) => {
+  const handleAddToCartWithDetails = (item, quantity, notes) => {
     setCart((prevCart) => {
       const existingItem = prevCart.items.find(
-        (cartItem) =>
-          cartItem.id === item.id &&
-          cartItem.specialInstructions === specialInstructions
+        (cartItem) => cartItem.id === item.id && cartItem.notes === notes
       );
 
       let newItems;
       if (existingItem) {
         newItems = prevCart.items.map((cartItem) =>
-          cartItem.id === item.id &&
-          cartItem.specialInstructions === specialInstructions
+          cartItem.id === item.id && cartItem.notes === notes
             ? { ...cartItem, quantity: cartItem.quantity + quantity }
             : cartItem
         );
       } else {
-        newItems = [
-          ...prevCart.items,
-          { ...item, quantity, specialInstructions },
-        ];
+        newItems = [...prevCart.items, { ...item, quantity, notes }];
       }
 
       return updateCartTotals(newItems);
     });
+    toast.success("Item added to cart successfully!");
   };
   // Update item quantity in cart
   const handleUpdateQuantity = (id, quantity) => {
@@ -156,11 +164,21 @@ const Home = () => {
 
   // Handle checkout
   const handleCheckout = () => {
-    alert("Checkout functionality would be implemented here!");
-    setIsCartOpen(false);
+    const orders = {
+      items: cart?.items?.map((item) => ({
+        foodMenuId: item.id,
+        quantity: item.quantity,
+        notes: item.notes || "",
+      })),
+      notes: notes,
+    };
+
+    mutate(orders);
   };
+
   return (
     <div className="min-h-screen bg-gray-50">
+      <Toaster position="top-right" reverseOrder={false} />
       <Header
         cart={cart}
         searchQuery={searchQuery}
@@ -169,12 +187,15 @@ const Home = () => {
       />
 
       <Hero />
-
-      <MenuCategories
-        categories={categories}
-        selectedCategory={selectedCategory}
-        onCategorySelect={setSelectedCategory}
-      />
+      {isLoading ? (
+        <SkeletonsCategory />
+      ) : (
+        <MenuCategories
+          categories={categories}
+          selectedCategory={selectedCategory}
+          onCategorySelect={setSelectedCategory}
+        />
+      )}
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {filteredItems?.length === 0 ? (
@@ -183,6 +204,8 @@ const Home = () => {
               No items found matching your search.
             </p>
           </div>
+        ) : menuLoading ? (
+          <SkeletonsMenuItems />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredItems?.map((item) => (
@@ -200,10 +223,13 @@ const Home = () => {
       <Cart
         isOpen={isCartOpen}
         cart={cart}
+        setCart={setCart}
         onClose={() => setIsCartOpen(false)}
         onUpdateQuantity={handleUpdateQuantity}
         onRemoveItem={handleRemoveItem}
         onCheckout={handleCheckout}
+        notes={notes}
+        setNotes={setNotes}
       />
 
       {selectedItem && (
