@@ -35,6 +35,9 @@ export default function Login() {
   const onSubmit = (data) => {
     mutate(data);
   };
+  const handleSignup = () => {
+    nav("/signup");
+  };
   return (
     <div>
       <div className="flex items-center justify-center min-h-screen bg-[#FF3B30]">
@@ -80,9 +83,13 @@ export default function Login() {
           </form>
           <p className="text-center text-gray-500 text-sm mt-4">
             Don't have an account?{" "}
-            <a href="#" className="text-[#FF3B30] font-medium">
+            <button
+              type="button"
+              onClick={handleSignup}
+              className="text-[#FF3B30] font-medium"
+            >
               Sign up
-            </a>
+            </button>
           </p>
         </div>
       </div>

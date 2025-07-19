@@ -1,15 +1,32 @@
 import React from "react";
-import { ShoppingCart, Search, Menu as MenuIcon } from "lucide-react";
+import { ShoppingCart, Search, Menu as MenuIcon, User2 } from "lucide-react";
 import { formatCurrency } from "../../../utils/currency";
-
-const Header = ({ cart, searchQuery, onSearchChange, onCartClick }) => {
+import { Dropdown, User } from "@heroui/react";
+import {
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
+  Button,
+} from "@heroui/react";
+const Header = ({
+  cart,
+  searchQuery,
+  onSearchChange,
+  onCartClick,
+  profileData,
+  onProfileClick,
+  onorderHistoryClick,
+}) => {
+  const handleSignout = () => {
+    localStorage.removeItem("token");
+    window.location.href = "/login";
+  };
   return (
     <header className="sticky top-0 z-50 bg-white shadow-lg border-b border-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex items-center">
-            <MenuIcon className="h-8 w-8 text-primary mr-2" />
             <h1 className="text-2xl font-bold text-gray-900">Food World</h1>
           </div>
 
@@ -27,22 +44,54 @@ const Header = ({ cart, searchQuery, onSearchChange, onCartClick }) => {
             </div>
           </div>
 
-          {/* Cart Button */}
-          <button
-            type="button"
-            onClick={onCartClick}
-            className="relative flex items-center space-x-2 bg-primary hover:bg-secondary  text-white px-4 py-2 rounded-lg transition-colors duration-200 cursor-pointer"
-          >
-            <ShoppingCart className="h-5 w-5" />
-            <span className="hidden sm:inline font-medium">
-              {formatCurrency(cart.total)}
-            </span>
-            {cart.itemCount > 0 && (
-              <span className="absolute -top-2 -right-2 border border-white bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                {cart.itemCount}
+          {/* Cart Button and profile*/}
+          <div className="flex  justify-end items-center">
+            <button
+              type="button"
+              onClick={onCartClick}
+              className="relative flex items-center space-x-2 bg-primary hover:bg-secondary  text-white px-4 py-2 rounded-lg transition-colors duration-200 cursor-pointer"
+            >
+              <ShoppingCart className="h-5 w-5" />
+              <span className="hidden sm:inline font-medium">
+                {formatCurrency(cart.total)}
               </span>
-            )}
-          </button>
+              {cart.itemCount > 0 && (
+                <span className="absolute -top-2 -right-2 border border-white bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  {cart.itemCount}
+                </span>
+              )}
+            </button>
+            <Dropdown>
+              <DropdownTrigger>
+                <Button variant="white" className="   ">
+                  {profileData?.profilePicture ? (
+                    <img src={profileData?.profilePicture} />
+                  ) : (
+                    <div className=" ">
+                      <User className=" " />
+                    </div>
+                  )}
+                </Button>
+              </DropdownTrigger>
+              <DropdownMenu aria-label="Static Actions">
+                <DropdownItem key="viewProfile" onClick={onProfileClick}>
+                  View Profile
+                </DropdownItem>
+                <DropdownItem key="orderHistory" onClick={onorderHistoryClick}>
+                  Order History
+                </DropdownItem>
+
+                <DropdownItem
+                  key="signOut"
+                  className="text-danger"
+                  color="danger"
+                  onClick={handleSignout}
+                >
+                  Sign out
+                </DropdownItem>
+              </DropdownMenu>
+            </Dropdown>
+          </div>
         </div>
 
         {/* Mobile Search Bar */}

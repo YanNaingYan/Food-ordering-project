@@ -1,3 +1,4 @@
+import { form } from "@heroui/theme";
 import { email } from "zod";
 const token = localStorage.getItem("token");
 const API_URL = "https://food-menu-five-delta.vercel.app/api/";
@@ -44,4 +45,31 @@ export const login = async (data) => {
     console.error("Error during login:", error);
     throw error;
   }
+};
+export const signup = async (formData) => {
+  try {
+    const res = await fetch(`${API_URL}${`auth/signup`}`, {
+      method: "POST",
+
+      body: formData,
+    });
+    const responseData = await res.json();
+
+    if (!res.ok) throw new Error("Login failed");
+    return responseData;
+  } catch (error) {
+    console.error("Error during login:", error);
+    throw error;
+  }
+};
+export const getProfile = async () => {
+  const res = await fetch(`${API_URL}${`auth/me`}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!res.ok) throw new Error("Failed to load profile");
+  return res.json();
 };

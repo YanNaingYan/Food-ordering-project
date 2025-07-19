@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import Hero from "../features/Hero";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { getCategories, getMenus, order } from "../../../api/api";
+import { getCategories, getMenus, getProfile, order } from "../../../api/api";
 import Header from "../features/Header";
 import Cart from "../features/Cart";
 import MenuItem from "../features/MenuItem";
@@ -11,6 +11,7 @@ import MenuItemDetail from "../features/MenuItemDetail";
 import toast, { Toaster } from "react-hot-toast";
 import SkeletonsMenuItems from "../components/SkeletonsMenuItems";
 import SkeletonsCategory from "../components/SkeletonsCategory";
+import ProfileDetail from "../features/ProfileDetail";
 const Home = () => {
   const {
     data: categories,
@@ -37,9 +38,11 @@ const Home = () => {
       toast.error("order failed!");
     },
   });
-
-  console.log("categories", categories);
-  console.log("menus", menus);
+  const { data: profile, isLoading: profileLoading } = useQuery({
+    queryKey: ["profile"],
+    queryFn: getProfile,
+  });
+  console.log("user profile", profile);
   const [notes, setNotes] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [cart, setCart] = useState({
@@ -49,6 +52,9 @@ const Home = () => {
   });
   const [searchQuery, setSearchQuery] = useState("");
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+
+  const [isOrderHistoryOpen, setIsOrderHistoryOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
@@ -178,12 +184,15 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Toaster position="top-right" reverseOrder={false} />
+      <Toaster position="top-center" reverseOrder={false} />
       <Header
         cart={cart}
+        profileData={profile}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         onCartClick={() => setIsCartOpen(true)}
+        onorderHistoryClick={() => setIsOrderHistoryOpen(true)}
+        onProfileClick={() => setIsProfileOpen(true)}
       />
 
       <Hero />
@@ -231,7 +240,11 @@ const Home = () => {
         notes={notes}
         setNotes={setNotes}
       />
-
+      <ProfileDetail
+        isOpen={isProfileOpen}
+        onClose={() => setIsProfileOpen(false)}
+        profileData={profile}
+      />
       {selectedItem && (
         <MenuItemDetail
           item={selectedItem}
